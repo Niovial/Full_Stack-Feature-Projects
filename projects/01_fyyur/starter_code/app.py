@@ -13,7 +13,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from flask_migrate import Migrate
 from forms import *
-from models import db
+from models import *
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -43,6 +43,22 @@ def format_datetime(value, format='medium'):
   return babel.dates.format_datetime(date, format, locale='en')
 
 app.jinja_env.filters['datetime'] = format_datetime
+
+# Prevent duplicate records by avoiding objects with similar names
+def prevent_duplicate(model, object):
+    object_names = []
+    # Get records by name
+    results = model.query.with_entities(model.name).all()
+
+    if results != [] :
+        for records in results:
+            object_names.append(records[0])
+
+    # Check if object name is already in database table
+    for name in object_names:
+        if object.name not in object_names:
+            db.session.add(object)
+
 
 #----------------------------------------------------------------------------#
 # Controllers.
@@ -194,6 +210,29 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+
+  try:
+      form  = VenueForm(request.form)
+
+      new_venue = Venue(
+          name = form.name.data,
+          city = form.city.data,
+          state = form.state.data,
+          address = form.address.data,
+          phone = form.phone.data,
+          genres = form.genres.data,
+          image_link = form.image_link.data,
+          facebook_link = form.facebook_link.data,
+          website = form.website_link.data,
+          seeking_talent = form.seeking_talent.data,
+          seeking_description = form.seeking_description.data
+      )
+      prevent_duplicate(Venue, new_venue)
+      db.session.commit()
+  except:
+      db.session.rollback()
+  finally:
+      db.session.close()
 
   # on successful db insert, flash success
   flash('Venue ' + request.form['name'] + ' was successfully listed!')
