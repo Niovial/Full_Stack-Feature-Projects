@@ -44,21 +44,45 @@ def format_datetime(value, format='medium'):
 
 app.jinja_env.filters['datetime'] = format_datetime
 
-# Prevent duplicate records by avoiding objects with similar names
+
 def prevent_duplicate(model, object):
-    object_names = []
-    # Get records by name
-    results = model.query.with_entities(model.name).all()
+    object_name = object.name
+    results = model.query.all()
+    names = []
 
-    if results != [] :
+    if results != []:
         for records in results:
-            object_names.append(records[0])
+            names.append(records.name)
 
-    # Check if object name is already in database table
-    for name in object_names:
-        if object.name not in object_names:
-            db.session.add(object)
+        for name in names:
+            if object_name not in names:
+                db.session.add(object)
+                return False
+            else:
+                return True
+    else:
+        db.session.add(object)
+        return False
 
+
+def prevent_duplicate_show(show):
+    date_of_show = show.start_time
+    results = Show.query.all()
+    dates = []
+
+    if results != []:
+        for records in results:
+            dates.append(records.start_time)
+
+        for date in dates:
+            if date_of_show not in dates:
+                db.session.add(show)
+                return False
+            else:
+                return True
+    else:
+        db.session.add(show)
+        return False
 
 #----------------------------------------------------------------------------#
 # Controllers.
@@ -211,9 +235,9 @@ def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
+  form  = VenueForm(request.form)
+  error = False
   try:
-      form  = VenueForm(request.form)
-
       new_venue = Venue(
           name = form.name.data,
           city = form.city.data,
@@ -227,17 +251,24 @@ def create_venue_submission():
           seeking_talent = form.seeking_talent.data,
           seeking_description = form.seeking_description.data
       )
-      prevent_duplicate(Venue, new_venue)
+      duplicates = prevent_duplicate(Venue, new_venue)
       db.session.commit()
-  except:
+  except ValueError as e:
+      error = True
+      print(e)
       db.session.rollback()
   finally:
       db.session.close()
 
   # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  if duplicates:
+      flash('An error occurred. Venue: ' + form.name.data + ' already exists!')
+  else:
+      flash('Venue ' + form.name.data + ' was successfully listed!')
+
   # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+  if error:
+      flash('An error occurred. Venue: ' + form.name.data + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
 
@@ -427,11 +458,38 @@ def create_artist_submission():
   # called upon submitting the new artist listing form
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  form = ArtistForm(request.form)
+  error = False
+  try:
+      new_artist = Artist(
+          name = form.name.data,
+          city = form.city.data,
+          state = form.state.data,
+          phone = form.phone.data,
+          genres = form.genres.data,
+          image_link = form.image_link.data,
+          facebook_link = form.facebook_link.data,
+          website = form.website_link.data,
+          seeking_venue = form.seeking_venue.data,
+          seeking_description = form.seeking_description.data
+      )
+      duplicates = prevent_duplicate(Artist, new_artist)
+      db.session.commit()
+  except ValueError as e:
+      error = True
+      print(e)
+      db.session.rollback()
+  finally:
+      db.session.close()
 
   # on successful db insert, flash success
-  flash('Artist ' + request.form['name'] + ' was successfully listed!')
+  if duplicates:
+      flash('An error occurred. Artist: ' + form.name.data + ' already exists!')
+  else:
+      flash('Artist ' + request.form['name'] + ' was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+  if error:
+      flash('An error occurred. Artist ' + form.name.data + ' could not be listed.')
   return render_template('pages/home.html')
 
 
@@ -490,11 +548,31 @@ def create_shows():
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
   # TODO: insert form data as a new Show record in the db, instead
+  form = ShowForm(request.form)
+  error = False
+  try:
+      new_show = Show(
+          start_time = form.start_time.data,
+          artist_id = form.artist_id.data,
+          venue_id = form.venue_id.data
+      )
+      duplicates = prevent_duplicate_show(new_show)
+      db.session.commit()
+  except ValueError as e:
+      error = True
+      print(e)
+      db.session.rollback()
+  finally:
+      db.session.close()
 
   # on successful db insert, flash success
-  flash('Show was successfully listed!')
+  if duplicates:
+      flash('Show already exists!')
+  else:
+      flash('Show was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Show could not be listed.')
+  if error:
+      flash('An error occurred. Show could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
 
