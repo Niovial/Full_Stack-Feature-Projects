@@ -45,26 +45,6 @@ def format_datetime(value, format='medium'):
 app.jinja_env.filters['datetime'] = format_datetime
 
 
-def prevent_duplicate(model, object):
-    object_name = object.name
-    results = model.query.all()
-    names = []
-
-    if results != []:
-        for records in results:
-            names.append(records.name)
-
-        for name in names:
-            if object_name not in names:
-                db.session.add(object)
-                return False
-            else:
-                return True
-    else:
-        db.session.add(object)
-        return False
-
-
 def prevent_duplicate_show(show):
     date_of_show = show.start_time
     results = Show.query.all()
@@ -242,7 +222,7 @@ def create_venue_submission():
           seeking_talent = form.seeking_talent.data,
           seeking_description = form.seeking_description.data
       )
-      duplicates = prevent_duplicate(Venue, new_venue)
+      db.session.add(new_venue)
       db.session.commit()
   except ValueError as e:
       error = True
@@ -252,14 +232,11 @@ def create_venue_submission():
       db.session.close()
 
   # on successful db insert, flash success
-  if duplicates:
-      flash('An error occurred. Venue: ' + form.name.data + ' already exists!')
-  else:
-      flash('Venue ' + form.name.data + ' was successfully listed!')
-
   # TODO: on unsuccessful db insert, flash an error instead.
   if error:
       flash('An error occurred. Venue: ' + form.name.data + ' could not be listed.')
+  else:
+      flash('Venue ' + form.name.data + ' was successfully listed!')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
 
@@ -508,7 +485,7 @@ def create_artist_submission():
           seeking_venue = form.seeking_venue.data,
           seeking_description = form.seeking_description.data
       )
-      duplicates = prevent_duplicate(Artist, new_artist)
+      db.session.add(new_artist)
       db.session.commit()
   except ValueError as e:
       error = True
@@ -518,13 +495,12 @@ def create_artist_submission():
       db.session.close()
 
   # on successful db insert, flash success
-  if duplicates:
-      flash('An error occurred. Artist: ' + form.name.data + ' already exists!')
-  else:
-      flash('Artist ' + request.form['name'] + ' was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
   if error:
       flash('An error occurred. Artist ' + form.name.data + ' could not be listed.')
+  else:
+      flash('Artist ' + form.name.data + ' was successfully listed!')
+
   return render_template('pages/home.html')
 
 
