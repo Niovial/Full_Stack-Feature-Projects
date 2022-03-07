@@ -110,14 +110,27 @@ def search_venues():
   # TODO: implement search on venues with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+  venues = Venue.query.with_entities(Venue.id, Venue.name).all()
+  term = request.form.get('search_term')
+  now = datetime.now()
+  today = now.strftime("%Y-%m-%d")
+
+  response = {
+    "count" : 0,
+    "data" : []
   }
+
+  for venue in venues:
+      if term.lower() in venue[1].lower():
+          response["count"] += 1
+          d = {
+            "id" : venue[0],
+            "name" : venue[1],
+            "num_upcoming_shows" : Show.query.filter(Show.start_time > today,
+                                    Show.venue_id == venue[0]).count()
+          }
+          response["data"].append(d)
+
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
@@ -147,28 +160,30 @@ def show_venue(venue_id):
   upcoming_shows_count = Show.query.filter(Show.start_time > today,
                           Show.venue_id == venue_id).count()
 
-  query_past_shows = Show.query.join(Artist).with_entities(Artist.name,
+  query_past_shows = Show.query.join(Artist).with_entities(Show.artist_id, Artist.name,
                         Artist.image_link, Show.start_time).filter(Show.start_time < today,
                         Show.venue_id == venue_id).all()
 
-  query_upcoming_shows = Show.query.join(Artist).with_entities(Artist.name,
+  query_upcoming_shows = Show.query.join(Artist).with_entities(Show.artist_id, Artist.name,
                         Artist.image_link, Show.start_time).filter(Show.start_time > today,
                         Show.venue_id == venue_id).all()
 
   past_shows = []
   for show in query_past_shows:
       d = {}
-      d["artist_name"] = show[0]
-      d["artist_image_link"] = show[1]
-      d["start_time"] = show[2].strftime("%Y-%m-%d %H:%M:%S")
+      d["artist_id"] = show[0]
+      d["artist_name"] = show[1]
+      d["artist_image_link"] = show[2]
+      d["start_time"] = show[3].strftime("%Y-%m-%d %H:%M:%S")
       past_shows.append(d)
 
   upcoming_shows = []
   for show in query_upcoming_shows:
       d = {}
-      d["artist_name"] = show[0]
-      d["artist_image_link"] = show[1]
-      d["start_time"] = show[2].strftime("%Y-%m-%d %H:%M:%S")
+      d["artist_id"] = show[0]
+      d["artist_name"] = show[1]
+      d["artist_image_link"] = show[2]
+      d["start_time"] = show[3].strftime("%Y-%m-%d %H:%M:%S")
       upcoming_shows.append(d)
 
   venue_data = {
@@ -247,6 +262,7 @@ def delete_venue(venue_id):
 
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
+
   return None
 
 #  Artists
@@ -272,14 +288,28 @@ def search_artists():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
-  response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+
+  artists = Artist.query.with_entities(Artist.id, Artist.name).all()
+  term = request.form.get('search_term')
+  now = datetime.now()
+  today = now.strftime("%Y-%m-%d")
+
+  response = {
+    "count" : 0,
+    "data" : []
   }
+
+  for artist in artists:
+      if term.lower() in artist[1].lower():
+          response["count"] += 1
+          d = {
+            "id" : artist[0],
+            "name" : artist[1],
+            "num_upcoming_shows" : Show.query.filter(Show.start_time > today,
+                                    Show.artist_id == artist[0]).count()
+          }
+          response["data"].append(d)
+
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
@@ -308,28 +338,30 @@ def show_artist(artist_id):
   upcoming_shows_count = Show.query.filter(Show.start_time > today,
                           Show.artist_id == artist_id).count()
 
-  query_past_shows = Show.query.join(Venue).with_entities(Venue.name,
+  query_past_shows = Show.query.join(Venue).with_entities(Show.venue_id, Venue.name,
                         Venue.image_link, Show.start_time).filter(Show.start_time < today,
                         Show.artist_id == artist_id).all()
 
-  query_upcoming_shows = Show.query.join(Venue).with_entities(Venue.name,
+  query_upcoming_shows = Show.query.join(Venue).with_entities(Show.venue_id, Venue.name,
                         Venue.image_link, Show.start_time).filter(Show.start_time > today,
                         Show.artist_id == artist_id).all()
 
   past_shows = []
   for show in query_past_shows:
       d = {}
-      d["venue_name"] = show[0]
-      d["venue_image_link"] = show[1]
-      d["start_time"] = show[2].strftime("%Y-%m-%d %H:%M:%S")
+      d["venue_id"] = show[0]
+      d["venue_name"] = show[1]
+      d["venue_image_link"] = show[2]
+      d["start_time"] = show[3].strftime("%Y-%m-%d %H:%M:%S")
       past_shows.append(d)
 
   upcoming_shows = []
   for show in query_upcoming_shows:
       d = {}
-      d["venue_name"] = show[0]
-      d["venue_image_link"] = show[1]
-      d["start_time"] = show[2].strftime("%Y-%m-%d %H:%M:%S")
+      d["venue_id"] = show[0]
+      d["venue_name"] = show[1]
+      d["venue_image_link"] = show[2]
+      d["start_time"] = show[3].strftime("%Y-%m-%d %H:%M:%S")
       upcoming_shows.append(d)
 
   artist_data = {
