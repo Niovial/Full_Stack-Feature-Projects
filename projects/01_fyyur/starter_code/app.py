@@ -265,7 +265,7 @@ def delete_venue(venue_id):
 
   error = False
   try:
-      venue = Venue.query.filter(Venue.id == venue_id)
+      venue = Venue.query.get_or_404(venue_id)
 
       db.session.delete(venue)
       db.session.commit()
