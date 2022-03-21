@@ -41,17 +41,27 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertTrue(data["categories"], type(data["categories"]) is dict)
+        self.assertTrue(data["categories"])
+
 
     def test_get_paginated_questions(self):
-        res = self.client().get('/questions?page=1')
+        res = self.client().get('/questions?page=2')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertTrue(data["questions"], type(data["questions"]) is list)
+        self.assertTrue(data["questions"])
         self.assertTrue(data["total_questions"])
-        self.assertTrue(data["current_category"])
+
+    def test_404_when_page_not_found(self):
+        res = self.client().get('/questions?page=1000')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertTrue(data["error"])
+        self.assertEqual(data["message"], "Resource cannot be found")
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

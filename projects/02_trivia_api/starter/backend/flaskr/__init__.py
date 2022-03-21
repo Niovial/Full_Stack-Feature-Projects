@@ -8,6 +8,20 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+def paginate_questions(request):
+    page = request.args.get("page", 1, type=int)
+
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+
+    questions = Question.query.order_by(Question.id).all()
+    formatted_questions = [question.format() for question in questions]
+    question_list = formatted_questions[start:end]
+
+    return question_list
+
+
+
 def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
@@ -43,8 +57,7 @@ def create_app(test_config=None):
       category_dict = {}
 
       for category in categories:
-          formatted = category.format()
-          category_dict[formatted.id] = formatted.type
+          category_dict[category.id] = category.type
 
 
       return jsonify({
@@ -67,14 +80,11 @@ def create_app(test_config=None):
   @app.route('/questions')
   def get_paginated_questions():
       # Paginate questions
-      page = request.args.get("page", 1, type=int)
+      question_list = paginate_questions(request)
 
-      start = (page - 1) * QUESTIONS_PER_PAGE
-      end = start + QUESTIONS_PER_PAGE
-
-      question_list = Question.query.order_by(Question.id).all()
-      formatted_questions = [question.format() for question in question_list]
-      questions = formatted_questions[start:end]
+      # Trigger an error when page argument is out of range
+      if question_list == []:
+          abort(404)
 
       # Get dictionary of categories
       categories = Category.query.order_by(Category.id).all()
@@ -83,14 +93,9 @@ def create_app(test_config=None):
       for category in categories:
           category_dict[category.id] = category.type
 
-      # Trigger an error when page argument is out of range
-      if questions == []:
-          abort(404)
-
-
       return jsonify({
         "success" : True,
-        "questions" : questions,
+        "questions" : question_list,
         "total_questions" : len(question_list),
         "categories" : category_dict,
         "current_category" : None
@@ -103,6 +108,7 @@ def create_app(test_config=None):
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page.
   '''
+
 
   '''
   @TODO:
@@ -124,6 +130,7 @@ def create_app(test_config=None):
   TEST: Search by any phrase. The questions list will update to include
   only question that include that string within their question.
   Try using the word "title" to start.
+
   '''
 
   '''
@@ -153,5 +160,13 @@ def create_app(test_config=None):
   Create error handlers for all expected errors
   including 404 and 422.
   '''
+  @app.errorhandler(404)
+  def resource_not_found(error):
+      return jsonify({
+        "success" : False,
+        "error" : 404,
+        "message" : "Resource cannot be found"
+      }), 404
+
 
   return app
