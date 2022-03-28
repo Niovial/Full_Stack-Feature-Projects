@@ -130,8 +130,26 @@ def create_app(test_config=None):
   TEST: Search by any phrase. The questions list will update to include
   only question that include that string within their question.
   Try using the word "title" to start.
-
   '''
+  @app.route('/questions', methods=['POST'])
+  def get_game_questions():
+      # There is a problem in this section of the code.
+      # Try and see if you can solve it later on.
+      try:
+          search_term = request.get_json().get("searchTerm", None)
+          questions = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
+          formatted_questions = [question.format() for question in questions]
+
+
+          return jsonify({
+            "success" : True,
+            "questions" : formatted_questions,
+            "total_questions" : len(formatted_questions),
+            "current_category" : None
+          })
+          
+      except:
+          abort(404)
 
   '''
   @TODO:
@@ -157,7 +175,7 @@ def create_app(test_config=None):
       return jsonify({
         "success" : True,
         "questions" : formatted_questions,
-        "total_questions" : len(Question.query.all()),
+        "total_questions" : len(formatted_questions),
         "current_category" : category.type
       })
 

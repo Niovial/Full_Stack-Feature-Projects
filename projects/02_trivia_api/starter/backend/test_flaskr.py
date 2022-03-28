@@ -59,7 +59,7 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
-        self.assertTrue(data["error"])
+        self.assertTrue(data["error"], 404)
         self.assertEqual(data["message"], "Resource cannot be found")
 
 
@@ -79,7 +79,25 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
-        self.assertTrue(data["error"])
+        self.assertEqual(data["error"], 404)
+        self.assertEqual(data["message"], "Resource cannot be found")
+
+    def test_get_searched_questions(self):
+        res = self.client().post('/questions', json={'searchTerm' : "th"})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertTrue(data["questions"])
+        self.assertTrue(data["total_questions"])
+
+    def test_404_when_question_not_found(self):
+        res = self.client().post('/questions', json={'searchTerm' : "jnfjnjen"})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["error"], 404)
         self.assertEqual(data["message"], "Resource cannot be found")
 
 # Make the tests conveniently executable
