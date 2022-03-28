@@ -132,24 +132,22 @@ def create_app(test_config=None):
   Try using the word "title" to start.
   '''
   @app.route('/questions', methods=['POST'])
-  def get_game_questions():
+  def get_searched_questions():
       # There is a problem in this section of the code.
       # Try and see if you can solve it later on.
-      try:
-          search_term = request.get_json().get("searchTerm", None)
-          questions = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
-          formatted_questions = [question.format() for question in questions]
+      search_term = request.get_json().get("searchTerm", None)
+      questions = Question.query.filter(Question.question.ilike(f"%{search_term}%")).all()
+      formatted_questions = [question.format() for question in questions]
 
-
-          return jsonify({
-            "success" : True,
-            "questions" : formatted_questions,
-            "total_questions" : len(formatted_questions),
-            "current_category" : None
-          })
-          
-      except:
+      if formatted_questions == []:
           abort(404)
+
+      return jsonify({
+        "success" : True,
+            "questions" : formatted_questions,
+        "total_questions" : len(formatted_questions),
+        "current_category" : None
+      })
 
   '''
   @TODO:
