@@ -144,7 +144,7 @@ def create_app(test_config=None):
 
       return jsonify({
         "success" : True,
-            "questions" : formatted_questions,
+        "questions" : formatted_questions,
         "total_questions" : len(formatted_questions),
         "current_category" : None
       })
@@ -189,6 +189,42 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not.
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def get_quiz_questions():
+        # Expecting list containing question ids
+        previous_questions = request.get_json().get("previous_questions")
+
+        # Expecting dictionary with category type and id
+        # e.g. {"type":"Science", "id":2}
+        quiz_category = request.get_json().get("quiz_category")
+
+        if quiz_category["id"] == 0:
+            questions = Question.query.all()
+        else:
+            questions = Question.query.filter(Question.category == quiz_category["id"]).all()
+
+        if not questions:
+            abort(422)
+
+        # Pick a random question for the user to answer
+        import random
+        random_question = random.choice(questions)
+        game_question = {}
+        if random_question.id not in previous_questions:
+            game_question = random_question.format()
+
+        # Continue game if there are questions to ask.
+        if game_question != {}:
+            return jsonify({
+                "success" : True,
+                "question" : game_question
+            })
+        else:
+            # End game if there are no more questions to ask
+            return jsonify({
+                "success" : True,
+                "question" : False
+            })
 
   '''
   @TODO:

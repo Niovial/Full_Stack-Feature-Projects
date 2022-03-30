@@ -100,6 +100,38 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["error"], 404)
         self.assertEqual(data["message"], "Resource cannot be found")
 
+
+    def test_get_quiz_questions(self):
+        res = self.client().post('/quizzes', json={
+                "quiz_category":{"type": "History", "id": 4},
+                "previous_questions":[2, 5]})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertTrue(data["question"])
+
+    def test_when_no_more_questions(self):
+        res = self.client().post('/quizzes', json={
+                "quiz_category":{"type": "History", "id": 6},
+                "previous_questions":[10, 11]})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertFalse(data["question"])
+
+    def test_422_when_no_questions_returned_on_query(self):
+        res = self.client().post('/quizzes', json={"quiz_category":
+                            {"type": "Unknown", "id": 600}})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["error"], 422)
+        self.assertEqual(data["message"], "Unprocessable")
+
+
 # Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()
