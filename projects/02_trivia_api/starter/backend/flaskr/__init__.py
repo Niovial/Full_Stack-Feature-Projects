@@ -120,6 +120,36 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.
   '''
+  @app.route('/create_questions', methods=['POST'])
+  def create_new_question():
+      try:
+          question = request.get_json().get("question", None)
+          answer = request.get_json().get("answer", None)
+          difficulty = request.get_json().get("difficulty", None)
+          category = request.get_json().get("category", None)
+
+          if question is None or answer is None:
+              raise ValueError("question or answer not present in request body")
+              abort(400)
+
+          new_question = Question(
+            question = question,
+            answer = answer,
+            category = category,
+            difficulty = difficulty
+          )
+          new_question.insert()
+
+          created_question = Question.query.filter(
+                                Question.question == question).one_or_none()
+          created_question = created_question.format()
+
+          return jsonify({
+            "success" : True,
+            "created_question" : created_question
+          })
+      except:
+          abort(400)
 
   '''
   @TODO:
@@ -246,6 +276,14 @@ def create_app(test_config=None):
         "error" : 422,
         "message" : "Unprocessable"
       }), 422
+
+  @app.errorhandler(400)
+  def bad_request(error):
+      return jsonify({
+        "success" : False,
+        "error" : 400,
+        "message" : "Bad request"
+      }), 400
 
 
   return app
