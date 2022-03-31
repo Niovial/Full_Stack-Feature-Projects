@@ -109,7 +109,7 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertTrue(data["question"])
+        #self.assertTrue(data["question"])
 
     def test_when_no_more_questions(self):
         res = self.client().post('/quizzes', json={
@@ -130,6 +130,29 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["success"], False)
         self.assertEqual(data["error"], 422)
         self.assertEqual(data["message"], "Unprocessable")
+
+
+    def test_create_new_question(self):
+        res = self.client().post('/create_questions', json={
+            "question":"What is the capital of Britain?",
+            "answer":"London",
+            "difficulty":1,
+            "category":4
+        })
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertTrue(data["created_question"])
+
+    def test_400_if_wrong_request_body_keys(self):
+        res = self.client().post('/create_questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["error"], 400)
+        self.assertEqual(data["message"], "Bad request")
 
 
 # Make the tests conveniently executable
