@@ -155,6 +155,23 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["message"], "Bad request")
 
 
+    def test_delete_a_question(self):
+        res = self.client().delete('/questions/23')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertTrue(data["deleted"])
+
+    def test_404_when_question_unavailable(self):
+        res = self.client().delete('/questions/2300')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["error"], 404)
+        self.assertEqual(data["message"], "Resource cannot found")
+
 # Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()
