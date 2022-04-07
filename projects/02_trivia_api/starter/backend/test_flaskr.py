@@ -170,7 +170,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
         self.assertEqual(data["error"], 404)
-        self.assertEqual(data["message"], "Resource cannot found")
+        self.assertEqual(data["message"], "Resource cannot be found")
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

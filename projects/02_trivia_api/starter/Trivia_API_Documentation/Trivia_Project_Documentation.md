@@ -106,7 +106,17 @@ The expected response should be:
   "5": "Entertainment",
   "6": "Sports"
 },
-"current_category": null,
+"current_category": [
+        "Geography",
+        "Art",
+        "Art",
+        "Art",
+        "Art",
+        "Science",
+        "Science",
+        "Science",
+        "History"
+    ],
 "questions": [
   {
     "answer": "Agra",

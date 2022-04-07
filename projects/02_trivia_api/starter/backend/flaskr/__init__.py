@@ -86,6 +86,12 @@ def create_app(test_config=None):
       if question_list == []:
           abort(404)
 
+      current_category = []
+      for question in question_list:
+          category = Category.query.filter(Category.id == question["category"]).\
+                        one_or_none()
+          current_category.append(category.type)
+
       # Get dictionary of categories
       categories = Category.query.order_by(Category.id).all()
       category_dict = {}
@@ -98,7 +104,7 @@ def create_app(test_config=None):
         "questions" : question_list,
         "total_questions" : len(question_list),
         "categories" : category_dict,
-        "current_category" : None
+        "current_category" : current_category
       })
 
   '''
