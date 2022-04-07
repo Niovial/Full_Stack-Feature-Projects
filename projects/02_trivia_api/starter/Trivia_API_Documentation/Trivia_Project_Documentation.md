@@ -74,7 +74,7 @@ The API handles the following errors:
 
 ### Endpoints
 
-GET /categories
+#### GET /categories
   * Fetches: a dictionary of the categories in which the keys are the ids and the values are the corresponding string of the category as well as a success value.
   * Request Arguments: None
 Sample Request: ```curl http://127.0.0.1:5000/categories```.
@@ -92,7 +92,7 @@ The expected response should be:
 }
 ```
 
-GET /questions
+#### GET /questions
   * Fetches: a list of question objects, success value, total number of questions, a dictionary of categories and the current category of questions. Results are paginated.
   * Request Arguments: The "page" request argument gets each page of results.
 Sample Request: ```curl http://127.0.0.1:5000/questions?page=2```.
@@ -177,7 +177,7 @@ The expected response should be:
 }
 ```
 
-POST /create_questions
+#### POST /create_questions
   * Creates and post a question object to the database.
   * Request Arguments: A JSON request body is needed with question, answer, difficulty and category keys with their values.
   * Returns a JSON formatted response containing a success value and the created question object if successful.
@@ -196,7 +196,7 @@ The expected response should be:
 }
 ```
 
-POST /questions
+#### POST /questions
   * Fetches a list question objects, a success value, total number of questions and the current category of questions based on the similarity of questions to the string value of the key "searchTerm" in the request body.
   * Request Arguments: A JSON request body is required with a searchTerm key and its corresponding string value.
 Sample request:```curl -X POST http://127.0.0.1:5000/questions -H 'Content-Type : application/json' -d '{"searchTerm" : "th"}'```.
@@ -295,7 +295,7 @@ The expected response will be:
 }
 ```
 
-GET /categories/id/questions
+#### GET /categories/id/questions
   * Fetches a list question objects, a success value, number of questions and the current category of questions based on the category of questions specified in the endpoint.
   * Request Arguments: None.
 Sample request: ```curl -X GET http://127.0.0.1:5000/categories/2/questions```.
@@ -338,7 +338,7 @@ The expected response should be:
 }
 ```
 
-DELETE /questions/5
+#### DELETE /questions/5
   * Deletes a question with the specified id if it exists.
   * Returns a JSON formatted containing a success value and the deleted question.
 Sample request: ```curl -X DELETE http://127.0.0.1:5000/questions/5```.
@@ -356,7 +356,7 @@ The expected response should be:
 }
 ```
 
-POST /quizzes
+#### POST /quizzes
   * Request Arguments: A JSON formatted list containing the ids of previous questions and JSON formatted dictionary containing the type and id of the category of questions being chosen from.
   * Fetches a random question based on category, and whether it is present in provided previous questions list or not.
 Sample Request: ```curl -X POST http://127.0.0.1:5000/quizzes -H 'Content-Type : application/json' -d '{"quiz_category":{"type": "History", "id": 4}, "previous_questions":[2, 5]}'```.
@@ -375,7 +375,7 @@ The expected response should be:
 ```
 
 
-# Deployment N/A
+## Deployment N/A
 
-# Authors
+## Authors
 Robert Kwami (Niovial)
